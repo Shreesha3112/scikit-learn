@@ -1147,7 +1147,9 @@ def check_dtype_object(name, estimator_orig):
     y = _enforce_estimator_tags_y(estimator, y)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     estimator.fit(X, y)
     if hasattr(estimator, "predict"):
@@ -1442,7 +1444,9 @@ def check_fit2d_1sample(name, estimator_orig):
         estimator.set_params(perplexity=0.5)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     msgs = [
         "1 sample",
@@ -1480,7 +1484,9 @@ def check_fit2d_1feature(name, estimator_orig):
         estimator.residual_threshold = 0.5
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     y = _enforce_estimator_tags_y(estimator, y)
     set_random_state(estimator, 1)
@@ -1574,7 +1580,9 @@ def check_transformers_unfitted_stateless(name, transformer):
 
     transformer = clone(transformer)
     if name == "SparseCoder":
-        transformer.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        transformer.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
     X_trans = transformer.transform(X)
 
     assert X_trans.shape[0] == X.shape[0]
@@ -1752,7 +1760,7 @@ def check_estimators_dtypes(name, estimator_orig):
         set_random_state(estimator, 1)
         if name == "SparseCoder":
             estimator.set_params(
-                dictionary=_generate_dictionary(n_features=X_train.shape[1])
+                dictionary=_generate_precomputed_dictionary(n_features=X_train.shape[1])
             )
         estimator.fit(X_train, y)
 
@@ -2700,7 +2708,9 @@ def check_estimators_fit_returns_self(name, estimator_orig, readonly_memmap=Fals
     set_random_state(estimator)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     assert estimator.fit(X, y) is estimator
 
@@ -3085,7 +3095,9 @@ def check_estimators_overwrite_params(name, estimator_orig):
     set_random_state(estimator)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     # Make a physical copy of the original estimator parameters before fitting.
     params = estimator.get_params()
@@ -3698,7 +3710,7 @@ def check_fit_idempotent(name, estimator_orig):
 
     if name == "SparseCoder":
         estimator.set_params(
-            dictionary=_generate_dictionary(n_features=X_train.shape[1])
+            dictionary=_generate_precomputed_dictionary(n_features=X_train.shape[1])
         )
 
     # Fit for the first time
@@ -3856,7 +3868,9 @@ def check_n_features_in_after_fitting(name, estimator_orig):
     X = _enforce_estimator_tags_X(estimator, X)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     if is_regressor(estimator):
         y = rng.normal(size=n_samples)
@@ -3957,7 +3971,9 @@ def check_dataframe_column_names_consistency(name, estimator_orig):
     y = _enforce_estimator_tags_y(estimator, y)
 
     if name == "SparseCoder":
-        estimator.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        estimator.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     # Check that calling `fit` does not raise any warnings about feature names.
     with warnings.catch_warnings():
@@ -4088,7 +4104,9 @@ def check_transformer_get_feature_names_out(name, transformer_orig):
     set_random_state(transformer)
 
     if name == "SparseCoder":
-        transformer.set_params(dictionary=_generate_dictionary(n_features=n_features))
+        transformer.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=n_features)
+        )
 
     y_ = y
     if name in CROSS_DECOMPOSITION:
@@ -4299,7 +4317,9 @@ def check_set_output_transform(name, transformer_orig):
     set_random_state(transformer)
 
     if name == "SparseCoder":
-        transformer.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        transformer.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     def fit_then_transform(est):
         if name in CROSS_DECOMPOSITION:
@@ -4426,7 +4446,9 @@ def check_set_output_transform_pandas(name, transformer_orig):
     df = pd.DataFrame(X, columns=feature_names_in, copy=False)
 
     if name == "SparseCoder":
-        transformer.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        transformer.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     transformer_default = clone(transformer).set_output(transform="default")
     outputs_default = _output_from_fit_transform(transformer_default, name, X, df, y)
@@ -4444,26 +4466,14 @@ def check_set_output_transform_pandas(name, transformer_orig):
         )
 
 
-def _generate_dictionary(n_components=9, n_features=5):
-    """The _generate_dictionary function generates a dictionary of n_components
-    randomly initialized vectors, each with n_features dimensions. The vectors are
-    normalized to unit length.
-
-    Parameters
-    ----------
-    :param n_components: Determine the number of components in the dictionary
-    :param n_features: Determine the number of features in the dictionary
-
-    Returns
-    -------
-    V: A matrix of size n_components x n_features
-    """
+def _generate_precomputed_dictionary(n_components=9, n_features=5):
+    """The _generate_precomputed_dictionary function generates a precomputed dictionary
+    of size n_components x n_features."""
 
     rng = np.random.RandomState(0)
-    V = rng.randn(n_components, n_features)  # random init
-    V /= np.sum(V**2, axis=1)[:, np.newaxis]
+    precomputed_dictionary = rng.randn(n_components, n_features)
 
-    return V
+    return precomputed_dictionary
 
 
 def check_global_ouptut_transform_pandas(name, transformer_orig):
@@ -4493,7 +4503,9 @@ def check_global_ouptut_transform_pandas(name, transformer_orig):
     df = pd.DataFrame(X, columns=feature_names_in, copy=False)
 
     if name == "SparseCoder":
-        transformer.set_params(dictionary=_generate_dictionary(n_features=X.shape[1]))
+        transformer.set_params(
+            dictionary=_generate_precomputed_dictionary(n_features=X.shape[1])
+        )
 
     transformer_default = clone(transformer).set_output(transform="default")
     outputs_default = _output_from_fit_transform(transformer_default, name, X, df, y)
