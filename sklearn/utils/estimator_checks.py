@@ -435,12 +435,7 @@ def _construct_instance(Estimator):
                 )
         elif required_parameters in (["dictionary"],):
             if issubclass(Estimator, SparseCoder):
-                n_components = 12
-                n_features = 3
-                rng = np.random.RandomState(0)
-                V = rng.randn(n_components, n_features)  # random init
-                V /= np.sum(V**2, axis=1)[:, np.newaxis]
-                estimator = Estimator(V)
+                estimator = Estimator(dictionary=_generate_precomputed_dictionary())
             else:
                 _raise_skip_test(Estimator, required_parameters)
         else:
@@ -4466,9 +4461,23 @@ def check_set_output_transform_pandas(name, transformer_orig):
         )
 
 
-def _generate_precomputed_dictionary(n_components=9, n_features=5):
-    """The _generate_precomputed_dictionary function generates a precomputed dictionary
-    of size n_components x n_features."""
+def _generate_precomputed_dictionary(n_components=9, n_features=3):
+    """
+    The _generate_precomputed_dictionary function generates a precomputed dictionary
+    of random numbers.
+
+    Parameters
+    ----------
+    n_components: int
+                Set the number of components in the dictionary
+    n_features: int
+                Set the number of features in the dictionary
+
+    Returns
+    -------
+    precomputed_dictionary : np.ndarray
+                            A numpy array with dimensions n_components x n_features
+    """
 
     rng = np.random.RandomState(0)
     precomputed_dictionary = rng.randn(n_components, n_features)

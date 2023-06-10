@@ -1717,7 +1717,7 @@ class DictionaryLearning(_BaseSparseCoding, BaseEstimator):
     ... )
     >>> dict_learner = DictionaryLearning(
     ...     n_components=15, transform_algorithm='lasso_lars', transform_alpha=0.1,
-    ...     random_state=42,
+    ...     random_state=42,_generate_precomputed_dictionary
     ... )
     >>> X_transformed = dict_learner.fit(X).transform(X)
 
